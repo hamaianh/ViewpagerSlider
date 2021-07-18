@@ -1,0 +1,50 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:custom="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:background="#000"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/transformers"
+        custom:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+        custom:spanCount="2"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:background="#131A32"
+        tools:itemCount="16"
+        tools:listitem="@layout/item_animation"
+        android:layout_height="wrap_content"/>
+
+    <View
+        android:id="@+id/line_choose"
+        android:layout_width="match_parent"
+        android:layout_above="@id/transformers"
+        android:layout_height="1dp"
+        android:background="#2A3560"/>
+
+    <TextView
+        android:id="@+id/text_choose"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:layout_above="@id/line_choose"
+        android:background="@drawable/bg_bottom_sheet_dialog"
+        android:padding="16dp"
+        android:gravity="center"
+        android:textStyle="bold"
+        android:text="Please choose effect"
+        android:textColor="#fff"/>
+
+    <com.example.myapplication.lib.SliderLayoutV2
+        android:id="@+id/slider"
+        android:layout_alignParentTop="true"
+        android:layout_above="@id/text_choose"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        custom:auto_cycle="true"
+        custom:indicator_visibility="visible"
+        custom:pager_animation="Accordion"
+        custom:pager_animation_span="900" />
+</RelativeLayout>
