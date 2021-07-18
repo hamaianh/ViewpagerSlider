@@ -1,7 +1,9 @@
 package com.example.myapplication.lib;
 
-import android.os.Build;
+
 import android.view.View;
+
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.nineoldandroids.view.ViewHelper;
 
@@ -26,8 +28,8 @@ public class FlipPageViewTransformerV2 extends BaseTransformerV2 {
     }
 
     private void setTranslation(View view) {
-        ViewPagerExV2 viewPager = (ViewPagerExV2) view.getParent();
-        int scroll = viewPager.getScrollX() - view.getLeft();
+        //ViewPager2 viewPager = (ViewPager2) view.getParent();
+        int scroll =  view.getScrollX() - view.getLeft();
         ViewHelper.setTranslationX(view,scroll);
     }
 

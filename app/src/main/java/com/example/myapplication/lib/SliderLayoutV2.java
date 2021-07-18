@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Message;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -12,23 +13,31 @@ import android.view.animation.Interpolator;
 import android.widget.RelativeLayout;
 
 import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.daimajia.slider.library.Animations.BaseAnimationInterface;
 import com.daimajia.slider.library.SliderLayout;
 import com.daimajia.slider.library.SliderTypes.BaseSliderView;
 import com.daimajia.slider.library.Tricks.FixedSpeedScroller;
 import com.example.myapplication.R;
+import com.example.myapplication.SlideObject;
+import com.example.myapplication.ViewPagerAdapter;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class SliderLayoutV2 extends RelativeLayout {
 
     private Context mContext;
-    private InfiniteViewPagerV2 mViewPager;
-    private SliderAdapterV2 mSliderAdapter;
-    private PagerIndicatorV2 mIndicator;
+    private ViewPager2 mViewPager;
+    //private SliderAdapterV2 mSliderAdapter;
+    private ViewPagerAdapter mViewPagerAdapter;
+    //private PagerIndicatorV2 mIndicator;
+    private List<SlideObject> listImagesMap;
 
     private Timer mCycleTimer;
     private TimerTask mCycleTask;
@@ -47,7 +56,7 @@ public class SliderLayoutV2 extends RelativeLayout {
 
     private long mSliderDuration = 4000;
 
-    private PagerIndicatorV2.IndicatorVisibility mIndicatorVisibility = PagerIndicatorV2.IndicatorVisibility.Visible;
+    //private PagerIndicatorV2.IndicatorVisibility mIndicatorVisibility = PagerIndicatorV2.IndicatorVisibility.Visible;
 
     private BaseTransformerV2 mViewPagerTransformer;
 
@@ -73,61 +82,78 @@ public class SliderLayoutV2 extends RelativeLayout {
         mTransformerSpan = attributes.getInteger(R.styleable.SliderLayout_pager_animation_span, 1100);
         mTransformerId = attributes.getInt(R.styleable.SliderLayout_pager_animation, SliderLayout.Transformer.Default.ordinal());
         mAutoCycle = attributes.getBoolean(R.styleable.SliderLayout_auto_cycle,true);
-        int visibility = attributes.getInt(R.styleable.SliderLayout_indicator_visibility,0);
-        for(PagerIndicatorV2.IndicatorVisibility v: PagerIndicatorV2.IndicatorVisibility.values()){
+        //int visibility = attributes.getInt(R.styleable.SliderLayout_indicator_visibility,0);
+        /*for(PagerIndicatorV2.IndicatorVisibility v: PagerIndicatorV2.IndicatorVisibility.values()){
             if(v.ordinal() == visibility){
                 mIndicatorVisibility = v;
                 break;
             }
-        }
-        mSliderAdapter = new SliderAdapterV2(mContext);
-        PagerAdapter wrappedAdapter = new InfinitePagerAdapterV2(mSliderAdapter);
+        }*/
+        //mSliderAdapter = new SliderAdapterV2(mContext);
+        //PagerAdapter wrappedAdapter = new InfinitePagerAdapterV2(mSliderAdapter);
+        listImagesMap = new ArrayList<>();
+        mViewPagerAdapter = new ViewPagerAdapter(mContext, listImagesMap);
 
-        mViewPager = (InfiniteViewPagerV2)findViewById(R.id.daimajia_slider_viewpager);
-        mViewPager.setAdapter(wrappedAdapter);
+        mViewPager = (ViewPager2) findViewById(R.id.slider_viewpager);
+        mViewPager.setAdapter(mViewPagerAdapter);
+        mViewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                super.onPageScrolled(position, positionOffset, positionOffsetPixels);
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+                Log.d("Slider Demo", "Page Changed: " + position);
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                super.onPageScrollStateChanged(state);
+            }
+        });
 
         mViewPager.setOnTouchListener((v, event) -> {
             int action = event.getAction();
-            switch (action) {
-                case MotionEvent.ACTION_UP:
-                    recoverCycle();
-                    break;
+            if (action == MotionEvent.ACTION_UP) {
+                recoverCycle();
             }
             return false;
         });
 
         attributes.recycle();
-        setPresetIndicator(SliderLayout.PresetIndicators.Center_Bottom);
+        //setPresetIndicator(SliderLayout.PresetIndicators.Center_Bottom);
         setPresetTransformer(mTransformerId);
         setSliderTransformDuration(mTransformerSpan,null);
-        setIndicatorVisibility(mIndicatorVisibility);
+        //setIndicatorVisibility(mIndicatorVisibility);
         if(mAutoCycle){
             startAutoCycle();
         }
     }
 
-    public void addOnPageChangeListener(ViewPagerExV2.OnPageChangeListener onPageChangeListener){
+    /*public void addOnPageChangeListener(ViewPager2.OnPageChangeCallback onPageChangeListener){
         if(onPageChangeListener != null){
-            mViewPager.addOnPageChangeListener((ViewPagerExV2.OnPageChangeListener) onPageChangeListener);
+            mViewPager.addOnLayoutChangeListener((OnLayoutChangeListener) onPageChangeListener);
         }
-    }
+    }*/
 
-    public void removeOnPageChangeListener(ViewPagerExV2.OnPageChangeListener onPageChangeListener) {
+    /*public void removeOnPageChangeListener(ViewPagerExV2.OnPageChangeListener onPageChangeListener) {
         mViewPager.removeOnPageChangeListener((ViewPagerExV2.OnPageChangeListener) onPageChangeListener);
-    }
+    }*/
 
-    public void setCustomIndicator(PagerIndicatorV2 indicator){
+    /*public void setCustomIndicator(PagerIndicatorV2 indicator){
         if(mIndicator != null){
             mIndicator.destroySelf();
         }
         mIndicator = indicator;
         mIndicator.setIndicatorVisibility(mIndicatorVisibility);
-        mIndicator.setViewPager(mViewPager);
+        //mIndicator.setViewPager(mViewPager);
         mIndicator.redraw();
-    }
+    }*/
 
-    public <T extends BaseSliderView> void addSlider(T imageContent){
-        mSliderAdapter.addSlider(imageContent);
+    public void addSlider(List<SlideObject> listImageContent){
+        mViewPagerAdapter.setList(listImageContent);
     }
 
     @SuppressLint("HandlerLeak")
@@ -237,14 +263,14 @@ public class SliderLayoutV2 extends RelativeLayout {
     public void setPagerTransformer(boolean reverseDrawingOrder,BaseTransformerV2 transformer){
         mViewPagerTransformer = transformer;
         mViewPagerTransformer.setCustomAnimationInterface(mCustomAnimation);
-        mViewPager.setPageTransformer(reverseDrawingOrder,mViewPagerTransformer);
+        mViewPager.setPageTransformer(mViewPagerTransformer);//ANHHA
     }
 
 
 
     public void setSliderTransformDuration(int period, Interpolator interpolator){
         try{
-            Field mScroller = ViewPagerExV2.class.getDeclaredField("mScroller");
+            Field mScroller = ViewPager2.class.getDeclaredField("mScroller");
             mScroller.setAccessible(true);
             FixedSpeedScroller scroller = new FixedSpeedScroller(mViewPager.getContext(),interpolator, period);
             mScroller.set(mViewPager,scroller);
@@ -256,20 +282,20 @@ public class SliderLayoutV2 extends RelativeLayout {
     public enum Transformer{
         Default("Default"),
         Accordion("Accordion"),
-        Background2Foreground("Background2Foreground"),
-        CubeIn("CubeIn"),
-        DepthPage("DepthPage"),
+        Background2Foreground("Background To Foreground"),
+        CubeIn("Cube In"),
+        DepthPage("Depth Page"),
         Fade("Fade"),
-        FlipHorizontal("FlipHorizontal"),
-        FlipPage("FlipPage"),
-        Foreground2Background("Foreground2Background"),
-        RotateDown("RotateDown"),
-        RotateUp("RotateUp"),
+        FlipHorizontal("Flip Horizontal"),
+        FlipPage("Flip Page"),
+        Foreground2Background("Foreground To Background"),
+        RotateDown("Rotate Down"),
+        RotateUp("Rotate Up"),
         Stack("Stack"),
         Tablet("Tablet"),
-        ZoomIn("ZoomIn"),
-        ZoomOutSlide("ZoomOutSlide"),
-        ZoomOut("ZoomOut");
+        ZoomIn("Zoom In"),
+        ZoomOutSlide("Zoom Out Slide"),
+        ZoomOut("Zoom Out");
 
         private final String name;
 
@@ -367,7 +393,7 @@ public class SliderLayoutV2 extends RelativeLayout {
 
 
 
-    public void setIndicatorVisibility(PagerIndicatorV2.IndicatorVisibility visibility){
+   /* public void setIndicatorVisibility(PagerIndicatorV2.IndicatorVisibility visibility){
         if(mIndicator == null){
             return;
         }
@@ -409,30 +435,27 @@ public class SliderLayoutV2 extends RelativeLayout {
         public int getResourceId(){
             return id;
         }
-    }
-    public void setPresetIndicator(SliderLayout.PresetIndicators presetIndicator){
+    }*/
+    /*public void setPresetIndicator(SliderLayout.PresetIndicators presetIndicator){
         PagerIndicatorV2 PagerIndicatorV2 = (PagerIndicatorV2)findViewById(presetIndicator.getResourceId());
         setCustomIndicator(PagerIndicatorV2);
-    }
+    }*/
 
-    private InfinitePagerAdapterV2 getWrapperAdapter(){
+   /* private InfinitePagerAdapterV2 getWrapperAdapter(){
         PagerAdapter adapter = mViewPager.getAdapter();
         if(adapter!=null){
             return (InfinitePagerAdapterV2)adapter;
         }else{
             return null;
         }
+    }*/
+
+    private ViewPagerAdapter getRealAdapter(){
+        ViewPagerAdapter adapter = (ViewPagerAdapter) mViewPager.getAdapter();
+        return adapter;
     }
 
-    private SliderAdapterV2 getRealAdapter(){
-        PagerAdapter adapter = mViewPager.getAdapter();
-        if(adapter!=null){
-            return ((InfinitePagerAdapterV2)adapter).getRealAdapter();
-        }
-        return null;
-    }
-
-    public int getCurrentPosition(){
+    /*public int getCurrentPosition(){
 
         if(getRealAdapter() == null)
             throw new IllegalStateException("You did not set a slider adapter");
@@ -466,15 +489,15 @@ public class SliderLayoutV2 extends RelativeLayout {
             //bug: when remove adapter's all the sliders.some caching slider still alive.
             mViewPager.setCurrentItem(mViewPager.getCurrentItem() +  count,false);
         }
-    }
+    }*/
 
     public void setCurrentPosition(int position, boolean smooth) {
         if (getRealAdapter() == null)
             throw new IllegalStateException("You did not set a slider adapter");
-        if(position >= getRealAdapter().getCount()){
+        if(position >= getRealAdapter().getItemCount()){
             throw new IllegalStateException("Item position is not exist");
         }
-        int p = mViewPager.getCurrentItem() % getRealAdapter().getCount();
+        int p = mViewPager.getCurrentItem() % getRealAdapter().getItemCount();
         int n = (position - p) + mViewPager.getCurrentItem();
         mViewPager.setCurrentItem(n, smooth);
     }

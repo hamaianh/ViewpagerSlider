@@ -66,7 +66,7 @@ public class TransformerAdapterV2 extends RecyclerView.Adapter<TransformerAdapte
 
         public void bindData(SliderLayoutV2.Transformer animation) {
             if (animation != null && !TextUtils.isEmpty(animation.name()))
-                mTextView.setText(animation.name());
+                mTextView.setText(animation.toString());
         }
     }
 

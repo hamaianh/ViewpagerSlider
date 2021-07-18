@@ -10,7 +10,7 @@ import com.nineoldandroids.view.ViewHelper;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public abstract class BaseTransformerV2 implements ViewPagerExV2.PageTransformer {
+public abstract class BaseTransformerV2 implements ViewPager2.PageTransformer {
 
     private BaseAnimationInterface mCustomAnimationInterface;
     protected abstract void onTransform(View view, float position);
